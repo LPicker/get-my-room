@@ -1,0 +1,6364 @@
+<html>
+<head>
+	<base target="_self" />
+	<title>Create</title>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<script src="/Scripts/jquery-1.8.2.min.js" type="text/javascript"></script>
+	<script src="/Scripts/jquery.validate.min.1.8.1.js" type="text/javascript"></script>
+	<script src="/Scripts/jquery.validate.unobtrusive.js" type="text/javascript"></script>
+	<script src="/Scripts/jquery-ui-1.9.0.js" type="text/javascript"></script>
+	<script src="/Scripts/jquery-ui-1.8.16/i18n/jquery.ui.datepicker-zh-CN.js" type="text/javascript"></script>
+	<script src="/Scripts/jstree/jquery.jstree.js" type="text/javascript"></script>
+	<script src="/Scripts/jquery.dateFormat-1.0.js" type="text/javascript"></script>
+	<script src="/Scripts/jquery.dialog.extra.js" type="text/javascript"></script>
+	<script src="/Scripts/jquery.form.js" type="text/javascript"></script>
+	<script src="/Scripts/jquery.highlight-1.1.js" type="text/javascript"></script>
+	<script src="/Scripts/Base/jquery-extension.js" type="text/javascript"></script>
+	<script src="/Scripts/Base/cls-page.js" type="text/javascript"></script>
+	<script src="/Scripts/Base/cls-table-common.js" type="text/javascript"></script>
+	<script src="/Scripts/Base/cls-export.js" type="text/javascript"></script>
+	<script src="/Scripts/Base/cls-utility.js" type="text/javascript"></script>
+	<script src="/Scripts/Base/cls-string.js" type="text/javascript"></script>
+	<script src="/Scripts/Base/cls-overlay.js" type="text/javascript"></script>
+	<script src="/Scripts/Base/global-init.js" type="text/javascript"></script>
+	<link href="/Content/themes/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" />
+	<link href="/Content/Site.css" rel="stylesheet" type="text/css" />
+	<link href="/Content/tables/default/table-default.css" rel="stylesheet" type="text/css" />
+	<script type="text/javascript">
+		var edit = 1;
+		var create = 0;
+		var detail = 2;
+		
+	</script>
+	<link rel="SHORTCUT ICON" href="/Content/Images/favicon.ico" />
+
+	<script type="text/javascript">
+		$(function () {
+			$(".datepickerBirthDate").datepicker("option", "yearRange", '1900:2016');
+			$(".nation").find("option[value='1']").attr("SELECTED", true);
+
+			/* 系统提示 或者 系统错误
+			----------------------------------------------------------*/
+			if ('' != "")
+				window.setTimeout("window.top.sysAlert('')", 500);
+			if ('' != "")
+				window.top.sysMessage('');
+
+			/* 导航内容
+			----------------------------------------------------------*/
+			var navigation = $.trim($(window.top.document).find(".menu-active").text()) + ">>" + $.trim($(window.top.document).find(".navigation").text());
+			$("form").append("<input type='hidden' name='navigation' id='navigation' value='" + navigation + "' />");
+
+			/* 计算页面高度与top window 高度
+			----------------------------------------------------------*/
+			var dialogInstances = [];
+			var uiDialog = $(window.top.document).find("div.ui-dialog");
+			for (var i = 0; i < uiDialog.length; i++) {
+				if ($(uiDialog[i]).css("z-index") == undefined || $(uiDialog[i]).css("z-index") == null)
+					continue;
+				dialogInstances[dialogInstances.length] = $(uiDialog[i]);
+			}
+			if (dialogInstances.length > 0) {
+				_sortByZIndex(dialogInstances);
+				var conentHeight = $(document).height();
+				var iframeHeight = dialogInstances[dialogInstances.length - 1].find("iframe").height();
+				if ((conentHeight - 6) > iframeHeight) {
+					$("body").css("overflow-y", "auto");
+					$("html").css("overflow-y", "auto");
+				}
+			}
+
+		});
+
+		function _sortByZIndex(a) {
+			var k, i;
+			for (i = 0; i < a.length - 1; i++) {
+				k = i;
+				for (j = i + 1; j < a.length; j++)
+					if (a[k].css("z-index") > a[j].css("z-index"))
+						k = j;
+				if (k != i) {
+					t = a[i];
+					a[i] = a[k];
+					a[k] = t;
+				}
+			}
+		}
+
+		//页面提交后不能再次进行提交
+		$(function () {
+			$("form").submit(function () {
+				if ($("form").valid()) {
+					$("input[type='submit']").attr("disabled", "disabled");
+				}
+				else {
+
+				}
+			})
+		})
+	</script>
+</head>
+<body style="display: none;">
+	<div>
+		<style type="text/css">
+	.male
+	{
+		background: url('/images/male.gif') transparent no-repeat 80px 2px;
+	}
+	.female
+	{
+		background: url('/images/female.gif') transparent no-repeat 80px 2px;
+	}
+	.building-container
+	{
+		width: 980px;
+		height: 465px;
+		*height:460px;
+		overflow: auto;
+	}
+	.building-container table
+	{
+		font-size: 13px;
+		font-family: 'Helvetica Neue' , Helvetica, Arial, sans-serif;
+		border-collapse: collapse;
+		color: #474747;
+	}
+	.building-container td
+	{
+		border: 1px solid grey;
+		background-color: #EFEFEF;
+	}
+	.floor-data
+	{
+		width: 45px;
+		background-color: White;
+		line-height: 50px;
+		color: Black;
+	}
+	.building-container td, .floor-data
+	{
+		height: 50px;
+	}
+	
+	.td-floor
+	{
+		text-align: center;
+		font-weight: bold;
+	}
+	.room-serial
+	{
+		font-weight: bold;
+		text-align: center;
+		color: Black;
+	}
+	.room-data
+	{
+	}
+	.room-available
+	{
+		background-color: #BAE2F7;
+		cursor: pointer;
+		height:60px;
+	}
+	.room-available, .room-data, .room-selected
+	{
+		width: 100px;
+		height:50px;
+		color: Black;
+		padding: 2px;
+	}
+	.room-no
+	{
+		font-weight: bold;
+	}
+	.room-info
+	{
+		float: right;
+		margin: 15px 0 0 0;
+	}
+	.room-selected
+	{
+		background-color: #FF0000;
+		cursor: pointer;
+		height:50px;
+	}
+	.room-used
+	{
+		background-color: #9AF7A5;
+		height:60px;
+	}
+	.room-wrap
+	{
+		
+	}
+</style>
+<script type="text/javascript">
+	var isSelect = true;
+	$(function () {
+		//幢与户型联动
+		$("#BuildingID").change(
+
+		function () {
+			//alert(1);
+			$.ajax({
+				type: "POST",
+				url: "/ModuleBook/PersonSelectRoom/RetriveRoomTypeByBuilding/",
+				data: "id=" + $(this).val(),
+				success: function (result) {
+					result = eval("(" + result + ")");
+					$("#RoomTypeID").empty();
+					$("#RoomTypeID").addItems({ itemData: result, textField: "UnitsName", valueField: "ID" });
+				}
+			});
+		}
+		);
+
+		//户型查找
+		$("#RoomTypeID").change(
+			function () {
+				var roomtypeid = $("#RoomTypeID").val();
+				var buildid = $("#BuildingID").val();
+				$.ajax({
+					type: "POST",
+					url: "/ModuleBook/PersonSelectRoom/GetRoomCountByRoomType/",
+					data: "roomtypeid=" + roomtypeid + "&buildid=" + buildid,
+					success: function (msg) {
+						msg = eval("(" + msg + ")");
+						//alert(msg.result);
+						if (msg.result == 0) {
+							window.top.sysAlert("对不起你要选的户型剩余数量为" + msg.result);
+							window.commonPage.submit();
+						}
+						else {
+							window.commonPage.submit();
+						}
+					}
+				});
+			}
+		);
+	});
+
+
+
+
+	function assignRoom(element, roomId, roomNo, houseorientation) {
+		if (!isSelect) {
+			return;
+		}
+		isSelect = false;
+		var roomInfo = $(element).find(".room-info").html();
+		$.ajax({
+			type: "POST",
+			url: "/ModuleBook/PersonSelectRoom/AjaxAssignRoom",
+			data: "roomId=" + roomId,
+			success: function (msg) {
+				msg = eval("(" + msg + ")");
+				if (msg.result == "") {
+					removeRoomSelected();
+					$(element).removeClass("room-available").addClass('room-selected ');
+					$(element).html("");
+					$(element).append("<span class='room-no'>" + roomNo + "朝向：" + houseorientation + "</span>");
+					$(element).append("<div class='clear'></div>");
+					$(element).append("<div class='room-info'>已预定</div>");
+					$(element).fadeOut();
+					$(element).fadeIn();
+					isSelect = true;
+					parent.SetValue(msg.roomid, msg.roomtpeyid, roomNo, msg.roomtypename, msg.conmunityID); //回参
+
+				}
+				else {
+					isSelect = true;
+					window.top.sysAlert(msg.result);
+				}
+			}
+		});
+	}
+
+
+	function unAssign(element, roomId, roomNo, houseorientation) {
+
+		$.ajax({
+			type: "POST",
+			url: "/ModuleRent/PersonalSelectRoom/AjaxUnAssignRoom",
+			data: "ApplyId=" + applyId + "&roomId=" + roomId,
+			success: function (msg) {
+				msg = eval("(" + msg + ")");
+				if (msg.result == "") {
+					$(element).removeClass().addClass('room-available');
+					$(element).html("");
+					$(element).append("<span class='room-no'>" + roomNo + "朝向：" + houseorientation + "</span>");
+					$(element).append("<div class='clear'></div>");
+					$(element).append("<div class='room-info'>" + (msg.info == "" ? element.attr("infor") : msg.info) + "</div>");
+				}
+				else {
+					window.top.sysAlert(msg.result);
+				}
+			}
+		});
+	}
+
+	function removeRoomSelected() {
+		var element = $(".room-selected");
+		element.removeClass().addClass('room-available');
+		element.html("");
+		element.append("<span class='room-no'>" + element.attr("room-no") + "朝向:" + element.attr("houseorientation") + "</span>");
+		element.append("<div class='clear'></div>");
+		element.append("<div class='room-info'>" + element.attr("infor") + "</div>");
+	}
+
+	function operateRoom(element, roomId, roomNo, houseorientation) {
+		if ($(element).children(":first").attr("class").indexOf("room-selected") >= 0) {
+			unAssign($(element).children(":first"), roomId, roomNo, houseorientation);
+			return;
+		}
+
+		if ($(element).children(":first").attr("class").indexOf("room-available") >= 0) {
+			assignRoom($(element).children(":first"), roomId, roomNo, houseorientation);
+			return;
+		}
+	}
+
+</script>
+
+<form action="/ModuleBook/PersonSelectRoom/Index?CommunityID=e46fe9e8-bd85-4b87-b68d-a3c501146273" method="post">	<div class="search-container">
+		<table>
+			<tr>
+				<th>
+					小区：
+				</th>
+				<td>
+					<div style="width: 100px;">锦业公寓</div>
+				</td>
+				<th>
+					幢
+				</th>
+				<td>
+					<select id="BuildingID" name="BuildingID"><option value="">--请选择--</option>
+<option value="d54adc0d-9a44-478e-84d0-a3c60111e21c">5号楼</option>
+<option value="bb88fc41-736e-49d4-964b-a3c60111b613">4号楼</option>
+<option value="7010a8ce-8fca-401d-a0d4-a3c601114e8c">3号楼</option>
+<option value="09833413-73af-4ae4-9e0b-a3c600a5d182">2号楼</option>
+<option selected="selected" value="a14b374b-bb3b-4b78-b574-a3c600a44858">1号楼</option>
+</select>
+				</td>
+				<th>
+					户型：
+				</th>
+				<td>
+					<select id="RoomTypeID" name="RoomTypeID"><option value="">--请选择--</option>
+<option selected="selected" value="9e6fed87-a185-4040-b4ff-a3c600a41758">锦1号楼A</option>
+</select>
+				</td>
+				
+				<td>
+					<input type="submit" value="" class="button-search" style="display:none"/>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div class="building-container">
+		<table cellpadding="0" cellspacing="0">
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">24F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="2401" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2402" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2403" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2404" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2405" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2406" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2407" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2408" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2409" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2410" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2411" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2412" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2413" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2414" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2415" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2416" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2417" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2418" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2419" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2420" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2421" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2422" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2423" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2424" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2425" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2426" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2427" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2428" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2429" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2430" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2431" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2432" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2433" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2434" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2435" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2436" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2437" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2438" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2439" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2440" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2441" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2442" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2443" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2444" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2445" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2446" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2447" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2448" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2449" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2450" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2451" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2452" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2453" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2454" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2455" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2456" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2457" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2458" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">23F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="2301" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2302" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2303" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2304" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2305" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2306" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2307" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2308" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2309" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2310" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2311" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2312" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2313" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2314" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2315" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2316" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2317" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2318" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2319" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2320" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2321" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2322" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2323" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2324" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2325" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2326" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2327" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2328" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2329" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2330" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2331" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2332" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2333" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2334" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2335" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2336" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2337" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2338" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2339" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2340" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2341" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2342" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2343" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2344" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2345" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2346" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2347" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2348" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2349" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2350" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2351" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2352" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2353" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2354" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2355" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2356" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2357" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2358" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">22F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="2201" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2202" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2203" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2204" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2205" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2206" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2207" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2208" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2209" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2210" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2211" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2212" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2213" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2214" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2215" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2216" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2217" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2218" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2219" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2220" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2221" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2222" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2223" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2224" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2225" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2226" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2227" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2228" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2229" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2230" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2231" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2232" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2233" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2234" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2235" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2236" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2237" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2238" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2239" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2240" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2241" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2242" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2243" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2244" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2245" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2246" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2247" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2248" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2249" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2250" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2251" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2252" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2253" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2254" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2255" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2256" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2257" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2258" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">21F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="2101" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2102" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2103" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2104" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2105" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2106" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2107" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2108" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2109" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2110" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2111" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2112" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2113" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2114" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2115" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2116" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2117" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2118" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2119" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2120" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2121" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2122" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2123" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2124" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2125" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2126" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2127" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2128" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2129" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2130" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2131" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2132" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2133" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2134" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2135" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2136" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2137" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2138" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2139" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2140" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2141" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2142" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2143" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2144" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2145" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2146" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2147" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2148" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2149" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2150" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2151" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2152" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2153" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2154" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2155" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2156" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2157" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2158" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">20F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="2001" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2002" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2003" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2004" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2005" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2006" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2007" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2008" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2009" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2010" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2011" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2012" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2013" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2014" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2015" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2016" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2017" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2018" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2019" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2020" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2021" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2022" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2023" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2024" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2025" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2026" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2027" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2028" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2029" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2030" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2031" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2032" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2033" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2034" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2035" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2036" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2037" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2038" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2039" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2040" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2041" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2042" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2043" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2044" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2045" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2046" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2047" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2048" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2049" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2050" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2051" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2052" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2053" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2054" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2055" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2056" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2057" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="2058" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">19F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="1901" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1902" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1903" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1904" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1905" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1906" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1907" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1908" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1909" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1910" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1911" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1912" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1913" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1914" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1915" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1916" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1917" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1918" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1919" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1920" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1921" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1922" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1923" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1924" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1925" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1926" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1927" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1928" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1929" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1930" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1931" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1932" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1933" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1934" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1935" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1936" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1937" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1938" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1939" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1940" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1941" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1942" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1943" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1944" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1945" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1946" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1947" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1948" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1949" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1950" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1951" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1952" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1953" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1954" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1955" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1956" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1957" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1958" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">18F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="1801" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1802" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1803" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1804" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1805" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1806" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1807" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1808" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1809" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1810" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1811" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1812" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1813" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1814" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1815" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1816" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1817" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1818" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1819" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1820" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1821" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1822" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1823" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1824" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1825" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1826" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1827" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1828" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1829" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1830" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1831" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1832" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1833" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1834" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1835" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1836" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1837" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1838" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1839" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1840" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1841" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1842" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1843" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1844" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1845" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1846" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1847" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1848" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1849" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1850" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1851" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1852" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1853" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1854" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1855" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1856" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1857" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1858" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">17F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="1701" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1702" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1703" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1704" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1705" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1706" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1707" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1708" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1709" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1710" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1711" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1712" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1713" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1714" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1715" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1716" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1717" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1718" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1719" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1720" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1721" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1722" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1723" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1724" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1725" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1726" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1727" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1728" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1729" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1730" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1731" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1732" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1733" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1734" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1735" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1736" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1737" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1738" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1739" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1740" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1741" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1742" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1743" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1744" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1745" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1746" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1747" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1748" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1749" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1750" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1751" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1752" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1753" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1754" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1755" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1756" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1757" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1758" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">16F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="1601" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1602" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1603" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1604" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1605" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1606" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1607" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1608" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1609" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1610" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1611" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1612" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1613" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1614" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1615" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1616" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1617" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1618" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1619" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1620" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1621" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1622" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1623" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1624" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1625" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1626" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1627" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1628" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1629" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1630" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1631" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1632" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1633" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1634" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1635" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1636" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1637" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1638" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1639" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1640" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1641" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1642" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1643" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1644" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1645" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1646" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1647" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1648" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1649" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1650" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1651" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1652" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1653" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1654" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1655" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1656" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1657" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1658" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">15F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="1501" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1502" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1503" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1504" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1505" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1506" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1507" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1508" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1509" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1510" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1511" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1512" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1513" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1514" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1515" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1516" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1517" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1518" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1519" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1520" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1521" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1522" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1523" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1524" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1525" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1526" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1527" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1528" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1529" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1530" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1531" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1532" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1533" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1534" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1535" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1536" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1537" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1538" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1539" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1540" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1541" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1542" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1543" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1544" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1545" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1546" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1547" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1548" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1549" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1550" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1551" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1552" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1553" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1554" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1555" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1556" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1557" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1558" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">14F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="1401" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1402" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1403" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1404" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1405" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1406" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1407" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1408" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1409" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1410" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1411" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1412" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1413" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1414" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1415" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1416" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1417" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1418" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1419" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1420" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1421" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1422" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1423" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1424" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1425" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1426" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1427" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1428" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1429" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1430" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1431" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1432" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1433" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1434" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1435" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1436" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1437" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1438" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1439" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1440" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1441" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1442" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1443" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1444" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1445" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1446" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1447" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1448" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1449" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1450" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1451" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1452" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1453" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1454" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1455" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1456" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1457" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1458" houseorientation="无" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">13F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="1301" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1302" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1303" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1304" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1305" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1306" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1307" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1308" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1309" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1310" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1311" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1312" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1313" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1314" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1315" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1316" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1317" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1318" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1319" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1320" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1321" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1322" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1323" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1324" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1325" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1326" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1327" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1328" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1329" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1330" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1331" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1332" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1333" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1334" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1335" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1336" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1337" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1338" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1339" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1340" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1341" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1342" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1343" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1344" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1345" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1346" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1347" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1348" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1349" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1350" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1351" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1352" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1353" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1354" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1355" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1356" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1357" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1358" houseorientation="无" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">12F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="1201" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1202" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1203" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1204" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1205" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1206" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1207" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1208" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1209" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1210" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1211" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1212" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1213" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1214" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1215" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1216" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1217" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1218" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1219" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1220" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1221" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1222" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1223" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1224" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1225" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1226" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1227" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1228" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1229" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1230" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1231" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1232" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1233" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1234" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1235" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1236" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1237" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1238" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1239" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1240" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1241" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1242" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1243" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div onclick="operateRoom(this,'2ac9561d-a400-4a15-8ac3-a3c600a44895','1244','南')" class="room-wrap">
+									<div class="room-available" room-no="1244" infor="空闲" houseorientation="南">
+										<span class="room-no clear">1244朝向：南</span>
+										<div class="clear">
+										</div>
+										<div class="room-info">空闲</div>
+									</div>
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1245" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1246" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1247" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1248" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1249" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1250" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1251" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1252" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1253" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1254" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1255" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1256" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1257" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1258" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">11F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="1101" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1102" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1103" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1104" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1105" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1106" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1107" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1108" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1109" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1110" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1111" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1112" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1113" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1114" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1115" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1116" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1117" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1118" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1119" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1120" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1121" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1122" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1123" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1124" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1125" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1126" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1127" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1128" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1129" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1130" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1131" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1132" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1133" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1134" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1135" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1136" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1137" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1138" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1139" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1140" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1141" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1142" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1143" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1144" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1145" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1146" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1147" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1148" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1149" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1150" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1151" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1152" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1153" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1154" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1155" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1156" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1157" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1158" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">10F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="1001" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1002" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1003" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1004" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1005" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1006" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1007" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1008" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1009" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1010" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1011" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1012" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1013" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1014" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1015" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1016" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1017" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1018" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1019" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1020" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1021" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1022" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1023" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1024" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1025" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1026" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1027" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1028" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1029" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1030" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1031" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1032" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1033" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1034" houseorientation="北" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1035" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1036" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1037" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1038" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1039" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1040" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1041" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1042" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1043" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1044" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1045" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1046" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1047" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1048" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1049" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1050" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1051" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1052" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1053" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1054" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1055" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1056" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1057" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="1058" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">9F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="0901" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0902" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0903" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0904" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0905" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0906" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0907" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0908" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0909" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0910" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0911" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0912" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0913" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0914" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0915" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0916" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0917" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0918" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0919" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0920" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0921" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0922" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0923" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0924" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0925" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0926" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0927" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0928" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0929" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0930" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0931" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0932" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0933" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0934" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0935" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0936" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0937" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0938" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0939" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0940" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0941" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0942" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0943" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0944" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0945" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0946" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0947" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0948" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0949" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0950" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0951" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0952" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0953" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0954" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0955" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0956" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0957" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0958" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">8F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="0801" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0802" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0803" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0804" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0805" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0806" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0807" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0808" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0809" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0810" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0811" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0812" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0813" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0814" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0815" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0816" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0817" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0818" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0819" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0820" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0821" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0822" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0823" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0824" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0825" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0826" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0827" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0828" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0829" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0830" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0831" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0832" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0833" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0834" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0835" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0836" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0837" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0838" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0839" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0840" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0841" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0842" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0843" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0844" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0845" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0846" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0847" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0848" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0849" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0850" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0851" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0852" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0853" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0854" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0855" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0856" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0857" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0858" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">7F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="0701" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0702" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0703" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0704" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0705" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0706" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0707" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0708" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0709" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0710" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0711" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0712" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0713" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0714" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0715" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0716" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0717" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0718" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0719" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0720" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0721" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0722" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0723" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0724" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0725" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0726" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0727" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0728" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0729" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0730" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0731" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0732" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0733" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0734" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0735" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0736" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0737" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0738" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0739" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0740" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0741" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0742" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0743" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0744" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0745" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0746" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0747" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0748" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0749" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0750" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0751" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0752" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0753" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0754" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0755" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0756" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0757" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0758" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">6F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="0601" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0602" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0603" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0604" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0605" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0606" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0607" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0608" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0609" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0610" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0611" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0612" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0613" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0614" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0615" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0616" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0617" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0618" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0619" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0620" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0621" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0622" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0623" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0624" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0625" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0626" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0627" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0628" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0629" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0630" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0631" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0632" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0633" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0634" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0635" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0636" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0637" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0638" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0639" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0640" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0641" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0642" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0643" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0644" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0645" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0646" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0647" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0648" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0649" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0650" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0651" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0652" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0653" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0654" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0655" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0656" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0657" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0658" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">5F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="0501" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0502" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0503" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0504" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0505" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0506" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0507" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0508" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0509" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0510" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0511" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0512" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0513" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0514" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0515" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0516" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0517" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0518" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0519" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0520" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0521" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0522" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0523" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0524" houseorientation="北" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0525" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0526" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0527" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0528" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0529" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0530" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0531" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0532" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0533" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0534" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0535" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0536" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0537" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0538" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0539" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0540" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0541" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0542" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0543" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0544" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0545" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0546" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0547" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0548" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0549" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0550" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0551" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0552" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0553" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0554" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0555" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0556" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0557" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0558" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">4F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="0401" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0402" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0403" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0404" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0405" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0406" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0407" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0408" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0409" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0410" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0411" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0412" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0413" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0414" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0415" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0416" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0417" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0418" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0419" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0420" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0421" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0422" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0423" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0424" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0425" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0426" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0427" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0428" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0429" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0430" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0431" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0432" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0433" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0434" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0435" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0436" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0437" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0438" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0439" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0440" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0441" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0442" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0443" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0444" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0445" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0446" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0447" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0448" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0449" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0450" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0451" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0452" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0453" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0454" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0455" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0456" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0457" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0458" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">3F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="0301" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0302" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0303" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0304" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0305" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0306" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0307" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0308" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0309" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0310" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0311" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0312" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0313" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0314" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0315" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0316" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0317" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0318" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0319" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0320" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0321" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0322" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0323" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0324" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0325" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0326" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0327" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0328" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0329" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0330" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0331" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0332" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0333" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0334" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0335" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0336" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0337" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0338" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0339" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0340" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0341" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0342" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0343" houseorientation="北" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0344" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0345" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0346" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0347" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0348" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0349" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0350" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0351" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0352" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0353" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0354" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0355" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0356" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0357" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0358" houseorientation="南" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">2F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="0201" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0202" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0203" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0204" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0205" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0206" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0207" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0208" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0209" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0210" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0211" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0212" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0213" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0214" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0215" houseorientation="南" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0216" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0217" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0218" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0219" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0220" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0221" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0222" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0223" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0224" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0225" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0226" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0227" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0228" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0229" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0230" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0231" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0232" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0233" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0234" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0235" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0236" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0237" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0238" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0239" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0240" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0241" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0242" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0243" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0244" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0245" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0246" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0247" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0248" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0249" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0250" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0251" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0252" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0253" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0254" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0255" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0256" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0257" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0258" houseorientation="无" >
+								</div>
+						</td>
+				</tr>
+				<tr>
+					<td class="td-floor">
+						<div class="floor-data">1F</div>
+					</td>
+						<td>
+								<div class="room-data" room-no="0101" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0102" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0103" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0104" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0105" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0106" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0107" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0108" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0109" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0110" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0111" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0112" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0113" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0114" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0115" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0116" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0117" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0118" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0119" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0120" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0121" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0122" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0123" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0124" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0125" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0126" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0127" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0128" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0129" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0130" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0131" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0132" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0133" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0134" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0135" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0136" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0137" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0138" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0139" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0140" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0141" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0142" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0143" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0144" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0145" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0146" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0147" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0148" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0149" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0150" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0151" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0152" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0153" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0154" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0155" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0156" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0157" houseorientation="无" >
+								</div>
+						</td>
+						<td>
+								<div class="room-data" room-no="0158" houseorientation="无" >
+								</div>
+						</td>
+				</tr>
+			<tr>
+				<td>
+					<div class="floor-data">
+					</div>
+				</td>
+					<td>
+						<div class="room-serial">
+							01
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							02
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							03
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							04
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							05
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							06
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							07
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							08
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							09
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							10
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							11
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							12
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							13
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							14
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							15
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							16
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							17
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							18
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							19
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							20
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							21
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							22
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							23
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							24
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							25
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							26
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							27
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							28
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							29
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							30
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							31
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							32
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							33
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							34
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							35
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							36
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							37
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							38
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							39
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							40
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							41
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							42
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							43
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							44
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							45
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							46
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							47
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							48
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							49
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							50
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							51
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							52
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							53
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							54
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							55
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							56
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							57
+						</div>
+					</td>
+					<td>
+						<div class="room-serial">
+							58
+						</div>
+					</td>
+			</tr>
+		</table>
+	</div>
+</form>
+	</div>
+	<div id="alert" style="display: none">
+	</div>
+</body>
+<script type="text/javascript">
+	$("body").fadeIn("slow");
+	var edit = 1;
+	var create = 0;
+	var detail = 2;
+</script>
+</html>
